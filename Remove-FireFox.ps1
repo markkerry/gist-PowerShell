@@ -1,3 +1,17 @@
+<#
+.Synopsis
+   Remove Mozilla Firefox
+.DESCRIPTION
+   This scripts closes Firefox and removes it using helper.exe
+   Script log located in C:\Windows\Logs
+.EXAMPLE
+   .\Remove-Firefox.ps1
+.NOTES
+   Written by: Mark Kerry
+   Date: 30/01/2019
+   Version: 1.0
+#>
+
 # Functions
 function Write-LogEntry {
     param(
@@ -43,6 +57,7 @@ function Stop-Firefox {
     }
 }
 
+# Main
 Write-LogEntry -Value "$(Get-Date -format g): Starting Remove-Firefox.ps1 on $env:COMPUTERNAME"
 Write-LogEntry -Value "$(Get-Date -format g): Killing Firefox if it is running"
 Stop-Firefox
@@ -52,15 +67,27 @@ if (Get-FirefoxX64) {
     Write-LogEntry -Value "$(Get-Date -format g): Firefox 64-bit is installed on $env:COMPUTERNAME"
     try { 
         $exitCode = (Start-Process -FilePath "C:\Program Files\Mozilla Firefox\uninstall\helper.exe" -ArgumentList "/s" -NoNewWindow -Wait -PassThru).ExitCode
+        Start-Sleep 15
         if (($exitCode -eq 0) -or ($exitCode -eq 3010)) {
             Write-LogEntry -Value "$(Get-Date -format g): Successfully uninstalled Firefox 64-bit"
+            
         }
         else {
             Write-LogEntry -Value "$(Get-Date -format g): Failed with exit code $exitCode"
         }
     }
     catch [System.Exception] {
-        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox 64-bit"
+        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox 64-bit - Exit code $exitCode"
+        Write-LogEntry -Value "$(Get-Date -format g): Exit Remove-Firefox.ps1 on $env:COMPUTERNAME"
+        exit 1
+    }
+    
+    Write-LogEntry -Value "$(Get-Date -format g): Cleaning up install folder"
+    try {
+        Remove-Item -Path "C:\Program Files\Mozilla Firefox" -Force -ErrorAction SilentlyContinue
+    }
+    catch [System.Exception] {
+        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox folder"
         Write-LogEntry -Value "$(Get-Date -format g): Exit Remove-Firefox.ps1 on $env:COMPUTERNAME"
         exit 1
     }
@@ -69,6 +96,7 @@ elseif (Get-FirefoxX86) {
     Write-LogEntry -Value "$(Get-Date -format g): Firefox 32-bit is installed on $env:COMPUTERNAME"
     try { 
         $exitCode = (Start-Process -FilePath "C:\Program Files (x86)\Mozilla Firefox\uninstall\helper.exe" -ArgumentList "/s" -NoNewWindow -Wait -PassThru).ExitCode
+        Start-Sleep 15
         if (($exitCode -eq 0) -or ($exitCode -eq 3010)) {
             Write-LogEntry -Value "$(Get-Date -format g): Successfully uninstalled Firefox 32-bit"
         }
@@ -77,7 +105,17 @@ elseif (Get-FirefoxX86) {
         }
     }
     catch [System.Exception] {
-        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox 32-bit"
+        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox 32-bit - Exit code $exitCode"
+        Write-LogEntry -Value "$(Get-Date -format g): Exit Remove-Firefox.ps1 on $env:COMPUTERNAME"
+        exit 1
+    }
+
+    Write-LogEntry -Value "$(Get-Date -format g): Cleaning up install folder"
+    try {
+        Remove-Item -Path "C:\Program Files (x86)\Mozilla Firefox" -Force -ErrorAction SilentlyContinue
+    }
+    catch [System.Exception] {
+        Write-LogEntry -Value "$(Get-Date -format g): Unable to remove Firefox folder"
         Write-LogEntry -Value "$(Get-Date -format g): Exit Remove-Firefox.ps1 on $env:COMPUTERNAME"
         exit 1
     }
